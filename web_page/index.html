@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSAM: Uncertainty-Guided Point Reparameterization for Generalizable Skin Lesion Segmentation</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <header>
+        <div class="header-content">
+            <h1>PSAM</h1>
+            <p class="subtitle">Uncertainty-Guided Point Reparameterization for Generalizable Skin Lesion Segmentation
+            </p>
+            <div class="authors">
+                <span class="author-name"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Jiajun.Sun@monash.edu">Jiajun
+                    Sun</span> •
+                <span class="author-name corresponding-author"
+                    data-affiliations="AIM for Health Lab, Monash University, Melbourne, VIC, Australia&#10;Faculty of IT, Monash University, Melbourne, VIC, Australia&#10;Email: Zhen.Yu1@monash.edu">Zhen
+                    Yu</span> •
+                <span class="author-name"
+                    data-affiliations="AIM for Health Lab, Monash University, Melbourne, VIC, Australia&#10;Faculty of Engineering, Monash University, Melbourne, VIC, Australia&#10;Email: Siyuan.Yan@monash.edu">Siyuan
+                    Yan</span> •
+                <span class="author-name"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Janet.Towns@monash.edu">Janet
+                    M Towns</span> •
+                <span class="author-name"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Lin.Zhang@monash.edu">Lin
+                    Zhang</span> •
+                <span class="author-name"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Jason.Ong@monash.edu">Jason
+                    J Ong</span> •
+                <span class="author-name"
+                    data-affiliations="AIM for Health Lab, Monash University, Melbourne, VIC, Australia&#10;Faculty of IT, Monash University, Melbourne, VIC, Australia&#10;Email: Zongyuan.Ge@monash.edu">Zongyuan
+                    Ge</span> •
+                <span class="author-name corresponding-author"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Lei.Zhang1@monash.edu">Lei
+                    Zhang</span>
+            </div>
+            <div class="conference">Pattern Recognition (Under Review) • 2025</div>
+            <div class="corresponding">
+                <span class="corresponding-label">Corresponding Authors:</span>
+                <span class="corresponding-author"
+                    data-affiliations="AIM for Health Lab, Monash University, Melbourne, VIC, Australia&#10;Faculty of IT, Monash University, Melbourne, VIC, Australia&#10;Email: Zhen.Yu1@monash.edu">Zhen
+                    Yu</span> •
+                <span class="corresponding-author"
+                    data-affiliations="School of Translational Medicine, Faculty of Medicine, Nursing and Health Sciences, Monash University, Melbourne, Australia&#10;Melbourne Sexual Health Centre, Alfred Health, Melbourne, Australia&#10;Email: Lei.Zhang1@monash.edu">Lei
+                    Zhang</span>
+            </div>
+        </div>
+    </header>
+
+    <nav>
+        <div class="nav-container">
+            <a href="#abstract">Abstract</a>
+            <a href="#method">Method</a>
+            <a href="#results">Results</a>
+            <a href="#code">Code</a>
+        </div>
+    </nav>
+
+    <main>
+        <section id="abstract">
+            <h2>Abstract</h2>
+            <div class="abstract-content">
+                <p>The Segment Anything Model (SAM) has demonstrated impressive zero-shot performance in general-domain
+                    image segmentation. However, its direct application to dermatology is hindered by a domain shift,
+                    resulting in suboptimal performance on the irregular boundaries and low-contrast features typical of
+                    skin lesions. Even when guided by point prompts, SAM often produces incomplete segmentations that
+                    fail to capture the full lesion extent.</p>
+                <p>To overcome these limitations, we propose <strong>PSAM</strong>, an uncertainty-guided prompting
+                    framework designed to enhance SAM's lesion segmentation capability. Instead of relying on heuristic
+                    or random point placement, PSAM leverages the model's own predictive uncertainty to identify
+                    ambiguous regions. It explicitly models this uncertainty to strategically sample complementary
+                    points, thereby effectively refining lesion boundaries. Furthermore, we introduce a pseudo-box
+                    constraint derived from these points to prevent segmentation leakage into benign areas.</p>
+                <p>Extensive experiments on public datasets, including ISIC 2016, Dermofit, and STIAtlas, demonstrate
+                    the superiority of our approach. Compared to state-of-the-art methods like nnU-Net, PSAM achieves an
+                    average performance increase of +1.42% on dermoscopic images and +5.85% on clinical images,
+                    showcasing improved zero-shot generalization.</p>
+            </div>
+        </section>
+
+        <section id="method">
+            <h2>Method Overview</h2>
+            <div class="method-content">
+                <div class="architecture">
+                    <img src="images/framework.png" alt="PSAM Framework" />
+                    <p class="caption">Figure 1: The framework of PSAM. Our method integrates uncertainty-guided point
+                        selection, edge feature augmentation, and pseudo-box constraints to achieve superior skin lesion
+                        segmentation.</p>
+                </div>
+                <div class="method-steps">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Edge Feature Augmentation</h3>
+                            <p>Enhances boundary detection through Canny edge detection and integrates edge information
+                                with image features via learnable convolutional layers</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Uncertainty-Guided Point Selection</h3>
+                            <p>Models predictive uncertainty by comparing top-2 mask predictions from SAM's decoder and
+                                uses Gumbel-Softmax reparameterization for differentiable point sampling</p>
+                        </div>
+                    </div>
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Pseudo-Box Constraint</h3>
+                            <p>Generates spatial constraints from point prompts to prevent segmentation leakage into
+                                benign regions, combining coarse localization with fine-grained control</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="results">
+            <h2>Results & Performance</h2>
+            <div class="results-content">
+                <div class="comparison">
+                    <img src="images/visual_comparison-v6.png" alt="Visual Comparison" />
+                    <p class="caption">Figure 2: Visual comparison of segmentation results across different methods and
+                        datasets. PSAM demonstrates superior boundary accuracy and lesion coverage compared to baseline
+                        methods.</p>
+                </div>
+
+                <div class="comparison">
+                    <img src="images/Figure1-v5.png" alt="Cross-Dataset Performance" />
+                    <p class="caption">Figure 3: Comparison of results produced by (b) nnU-Net, (c) ScribbleSaliency
+                        (with
+                        scribble prompts), (d) SAM (with point prompts), (e) One-Prompt (with point prompts), (f)
+                        Medical SAM (with box prompts), and (g) our proposed prompt-enhanced SAM (PASM). (I) represents
+                        dermatologic cases, while (II) represents skin infection cases captured in clinical settings.
+                        The red curve represents the model’s segmentation results, while the green curve indicates the
+                        ground truth. Red boxes highlight prediction failures. The right section presents the
+                        quantitative comparisons, with validation results displayed at the top and test results at the
+                        bottom.</p>
+                </div>
+
+                <div class="comparison">
+                    <img src="images/Figure3-v3.png" alt="Ablation Study" />
+                    <p class="caption">Figure 4: Visualization of the uncertain mask and supplemental points. The
+                        initial points are marked with green stars. The uncertain mask is shown on the right, with
+                        darker colours indicating higher uncertainty. Four positive and four negative supplemental
+                        points, indicated by yellow and blue stars respectively, are calculated from uncertain masks.
+                        The final output, displayed on the left, is represented by the red curve.</p>
+                </div>
+
+                <div class="results-table-section">
+                    <h3>Quantitative Results Comparison</h3>
+                    <div class="table-container">
+                        <table class="results-table">
+                            <thead>
+                                <tr>
+                                    <th>Dataset</th>
+                                    <th>Model</th>
+                                    <th>Dice Coefficient</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="method-row">
+                                    <td class="method-name">HAM10000 (val)</td>
+                                    <td class="input-type">nnU-Net</td>
+                                    <td>0.901 (0.895-0.908)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">HAM10000 (val)</td>
+                                    <td class="input-type"><strong>PSAM</strong></td>
+                                    <td class="bold">0.912 (0.907-0.918)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">ISIC2016</td>
+                                    <td class="input-type">nnU-Net</td>
+                                    <td>0.868 (0.852-0.884)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">ISIC2016</td>
+                                    <td class="input-type"><strong>PSAM</strong></td>
+                                    <td class="bold">0.890 (0.878-0.902)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">Dermofit</td>
+                                    <td class="input-type">nnU-Net</td>
+                                    <td>0.817 (0.810-0.825)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">Dermofit</td>
+                                    <td class="input-type"><strong>PSAM</strong></td>
+                                    <td class="bold">0.841 (0.834-0.848)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">STIAtlas</td>
+                                    <td class="input-type">One-Prompt</td>
+                                    <td>0.814 (0.809-0.819)</td>
+                                </tr>
+                                <tr class="method-row">
+                                    <td class="method-name">STIAtlas</td>
+                                    <td class="input-type"><strong>PSAM</strong></td>
+                                    <td class="bold">0.769 (0.763-0.775)</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="table-legend">
+                        <p><strong>Legend:</strong> <span class="bold">Bold</span> = Best performance</p>
+                        <p><strong>Metrics:</strong> Dice Coefficient (Dice) ↑ = Higher is better</p>
+                    </div>
+                </div>
+
+                <div class="metrics">
+                    <div class="metric-card">
+                        <div class="metric-value">0.912</div>
+                        <div class="metric-label">Best Dice Score</div>
+                        <div class="metric-desc">On HAM10000 validation set</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">+5.85%</div>
+                        <div class="metric-label">Improvement</div>
+                        <div class="metric-desc">Over nnU-Net on clinical images</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">0.13s</div>
+                        <div class="metric-label">Inference Time</div>
+                        <div class="metric-desc">Per image (20x faster than Medical SAM)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="code">
+            <h2>Code & Resources</h2>
+            <div class="resources-content">
+                <div class="buttons">
+                    <a href="https://github.com/echosun1996/PSAM" class="btn btn-primary" target="_blank"
+                        rel="noopener noreferrer">
+                        <span class="btn-icon">📁</span>
+                        GitHub
+                    </a>
+                    <a href="#citation" class="btn btn-secondary">
+                        <span class="btn-icon">📄</span>
+                        Paper
+                    </a>
+                </div>
+                <div class="quick-start">
+                    <h3>Quick Start</h3>
+                    <div class="code-block">
+                        <code>git clone https://github.com/echosun1996/PSAM.git</code>
+                        <code>cd PSAM</code>
+                        <code>cd code</code>
+                        <code>pip install -r requirements.txt</code>
+                        <code>bash main.sh</code>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="citation">
+            <h2>Citation</h2>
+            <div class="citation-content">
+                <div class="bibtex">
+                    <pre><code>Paper is under review. Citation will be available upon publication.
+</code></pre>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="footer-content">
+            <p>&copy; 2024 Monash University AIM Group Dermatology Team. All rights reserved.</p>
+            <p>For questions and collaborations, please contact: <strong>Jiajun Sun</strong> (Jiajun.Sun@monash.edu) and
+                <strong>Zhen Yu</strong> (Zhen.Yu1@monash.edu)
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Add click event listeners to all author names and corresponding authors
+        document.addEventListener('DOMContentLoaded', function () {
+            const authorNames = document.querySelectorAll('.author-name, .corresponding-author');
+
+            authorNames.forEach(author => {
+                author.addEventListener('click', function (e) {
+                    e.stopPropagation(); // Prevent event bubbling
+                    const affiliations = this.getAttribute('data-affiliations');
+                    if (affiliations) {
+                        showAffiliationTooltip(this, affiliations);
+                    }
+                });
+            });
+        });
+
+        function showAffiliationTooltip(element, affiliations) {
+            // Remove any existing tooltips
+            const existingTooltip = document.querySelector('.affiliation-tooltip');
+            if (existingTooltip) {
+                existingTooltip.remove();
+            }
+
+            // Create tooltip
+            const tooltip = document.createElement('div');
+            tooltip.className = 'affiliation-tooltip';
+
+            // Split affiliations by &#10; (line break) and create formatted content
+            // First decode HTML entities, then split by actual line breaks
+            const decodedAffiliations = affiliations.replace(/&#10;/g, '\n');
+            const affiliationList = decodedAffiliations.split('\n').filter(aff => aff.trim() !== '');
+            const formattedContent = affiliationList.map((aff, index) => {
+                if (aff.startsWith('Email:')) {
+                    return `<div class="email-line">${aff}</div>`;
+                } else {
+                    // Add bullet point before each affiliation
+                    return `<div class="affiliation-line">• ${aff}</div>`;
+                }
+            }).join('');
+
+            tooltip.innerHTML = formattedContent;
+
+            // Position tooltip
+            const rect = element.getBoundingClientRect();
+            tooltip.style.position = 'fixed';
+            tooltip.style.top = (rect.bottom + 10) + 'px';
+            tooltip.style.left = (rect.left + rect.width / 2) + 'px';
+            tooltip.style.transform = 'translateX(-50%)';
+
+            // Add to body
+            document.body.appendChild(tooltip);
+
+            // Auto-remove after 5 seconds (longer for more content)
+            setTimeout(() => {
+                if (tooltip.parentNode) {
+                    tooltip.remove();
+                }
+            }, 5000);
+
+            // Also remove on click outside
+            const removeTooltipHandler = function (e) {
+                if (!element.contains(e.target) && !tooltip.contains(e.target)) {
+                    tooltip.remove();
+                    document.removeEventListener('click', removeTooltipHandler);
+                }
+            };
+            // Use setTimeout to avoid immediate removal
+            setTimeout(() => {
+                document.addEventListener('click', removeTooltipHandler);
+            }, 100);
+        }
+    </script>
+</body>
+
+</html>
